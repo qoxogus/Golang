@@ -47,17 +47,3 @@ func hitURL(url string, c chan<- requestResult) {
 	}
 	c <- requestResult{url: url, status: status}
 }
-
-//qwerqwer
-//잔디확인용tpr
-//1107
-//asdf
-//잔디잔디잔디
-//김기홍바보
-//add
-//add 1025
-//잔디가 안돼
-//1
-//134
-//123123
-//123123123
