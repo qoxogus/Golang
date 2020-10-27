@@ -1,19 +1,33 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 var baseURL string = "https://kr.indeed.com/jobs?q=python&limit=50"
 
+//얼마나 많은 페이지가 있는지 알아내는 프로그램
 func main() {
-	getPages()
+	totalPages := getPages()
+	//fmt.Println(totalPages)
+
+	for i := 0; i < totalPages; i++ {
+		getPage(i)
+	}
+}
+
+func getPage(page int) {
+	pageURL := baseURL + "&start=" + strconv.Itoa(page*50) //=page*50 	string이 아니라 숫자니까 go에 포함된 패키지를 이용해 형변환해서 넣는다 생각 (int to asci/Itoa)
+	fmt.Println("Requestring", pageURL)
 }
 
 func getPages() int {
+	pages := 0
 	res, err := http.Get(baseURL)
 	checkErr(err)
 	checkCode(res) //response(응답)
@@ -24,9 +38,11 @@ func getPages() int {
 	checkErr(err)
 
 	// fmt.Println(doc)
-	doc.Find(".pagination").Each()
+	doc.Find(".pagination").Each(func(i int, s *goquery.Selection) {
+		pages = s.Find("a").Length()
+	})
 
-	return 0
+	return pages
 }
 
 func checkErr(err error) {
