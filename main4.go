@@ -113,3 +113,5 @@ func checkCode(res *http.Response) {
 		log.Fatalln("Request failed with Status :", res.StatusCode)
 	}
 }
+
+//read code and study
