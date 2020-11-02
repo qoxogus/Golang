@@ -43,7 +43,7 @@ func writeJobs(jobs []extractedJob) {
 	w := csv.NewWriter(file)
 	defer w.Flush()
 
-	headers := []string{"ID", "Title", "Location", "Salary", "Summary"}
+	headers := []string{"Link", "Title", "Location", "Salary", "Summary"} //Id에서 링크로 바뀜
 
 	wErr := w.Write(headers) //Write함수는 에러를 리턴함
 	checkErr(wErr)
@@ -57,6 +57,7 @@ func writeJobs(jobs []extractedJob) {
 
 func getPage(page int) []extractedJob {
 	var jobs []extractedJob
+	c := make(chan extractedJob)
 	pageURL := baseURL + "&start=" + strconv.Itoa(page*50) //=page*50 	string이 아니라 숫자니까 go에 포함된 패키지를 이용해 형변환해서 넣는다 생각 (int to asci/Itoa)
 	fmt.Println("Requestring", pageURL)
 	res, err := http.Get(pageURL)
@@ -77,13 +78,19 @@ func getPage(page int) []extractedJob {
 		// //fmt.Println(title)
 		// location := cleanString(card.Find(".sjcl").Text())
 		// fmt.Println(id, title, location)
-		job := extractJob(card)
-		jobs = append(jobs, job) //append를 이용하여 jobs라는 배열에 추출한 job을 업데이트함
+		go extractJob(card, c)
+		//jobs = append(jobs, job) //append를 이용하여 jobs라는 배열에 추출한 job을 업데이트함
 	})
+
+	for i:=0; i<searchCards.Length();i++{
+		job := <-c
+		jobs = append(jobs, job)
+	}
+
 	return jobs
 }
 
-func extractJob(card *goquery.Selection) extractedJob {
+func extractJob(card *goquery.Selection, c chan<- extractedJob) {
 	id, _ := card.Attr("data-jk")
 	//fmt.Println(id)
 	title := cleanString(card.Find(".title>a").Text())
@@ -91,7 +98,7 @@ func extractJob(card *goquery.Selection) extractedJob {
 	location := cleanString(card.Find(".sjcl").Text())
 	salary := cleanString(card.Find(".salaryText").Text())
 	summary := cleanString(card.Find(".summary").Text())
-	return extractedJob{
+	c <- extractedJob{
 		id:       id,
 		title:    title,
 		location: location,
@@ -139,3 +146,15 @@ func checkCode(res *http.Response) {
 //read code and study
 //read code and study
 //read code and study
+
+/*가장먼저 getPages함수가 실행된다. 총 몇페이지인지 알아야하니까
+각페이지별로 getPage가 실행된다 (19페이지)
+getPage가 실행되는 중에 extractJob도 실행됨 (50개)
+(현재 goroutine으로 바꿀 예정) goroutine이 종료되면 getPage로
+채널을 전달함 getPage가 실행이 종료되면 main함수로 채널전송
+
+
+처음에는 총페이지수를 가져옴 그후에는 각페이지별로 goroutine을 생성
+getPage는 각 일자리 정보별로 goroutine을 생성
+
+
