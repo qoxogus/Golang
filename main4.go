@@ -25,13 +25,21 @@ var baseURL string = "https://kr.indeed.com/jobs?q=python&limit=50"
 //얼마나 많은 페이지가 있는지 알아내는 프로그램
 func main() {
 	var jobs []extractedJob
+	c := make(chan []extractedJob)
 	totalPages := getPages()
 	//fmt.Println(totalPages)
 
 	for i := 0; i < totalPages; i++ {
-		extractedJobs := getPage(i)
+		//extractedJobs := getPage(i)
+		go getPage(i, c)
+		//jobs = append(jobs, extractedJobs...)
+	}
+
+	for i := 0; i < totalPages; i++ {
+		extractedJobs := <-c
 		jobs = append(jobs, extractedJobs...)
 	}
+
 	writeJobs(jobs)
 	fmt.Println("Done, extracted", len(jobs))
 }
@@ -55,7 +63,7 @@ func writeJobs(jobs []extractedJob) {
 	}
 }
 
-func getPage(page int) []extractedJob {
+func getPage(page int, mainC chan<- []extractedJob) {
 	var jobs []extractedJob
 	c := make(chan extractedJob)
 	pageURL := baseURL + "&start=" + strconv.Itoa(page*50) //=page*50 	string이 아니라 숫자니까 go에 포함된 패키지를 이용해 형변환해서 넣는다 생각 (int to asci/Itoa)
@@ -82,12 +90,11 @@ func getPage(page int) []extractedJob {
 		//jobs = append(jobs, job) //append를 이용하여 jobs라는 배열에 추출한 job을 업데이트함
 	})
 
-	for i:=0; i<searchCards.Length();i++{
+	for i := 0; i < searchCards.Length(); i++ {
 		job := <-c
 		jobs = append(jobs, job)
 	}
-
-	return jobs
+	mainC <- jobs
 }
 
 func extractJob(card *goquery.Selection, c chan<- extractedJob) {
@@ -156,5 +163,4 @@ getPage가 실행되는 중에 extractJob도 실행됨 (50개)
 
 처음에는 총페이지수를 가져옴 그후에는 각페이지별로 goroutine을 생성
 getPage는 각 일자리 정보별로 goroutine을 생성
-
-
+*/
