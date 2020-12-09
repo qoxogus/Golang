@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type userinfo struct {
+type updateuserinfo struct {
 	Classnum int    `json:"classnum" bson:"classnum"`
 	Username string `json:"username" bson:"username"`
 }
@@ -32,15 +32,8 @@ func main() {
 
 	coll := client.Database("DBTEST").Collection("mongodb")
 
-	//입력할 데이터
-	userinfo := userinfo{1103, "KimBoSuk"}
-
-	//mongoDB insert
-	coll.InsertOne(context.TODO(), userinfo)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("insert success")
+	//mongoDB update
+	//update
 
 	err = client.Disconnect(context.TODO())
 	if err != nil {
