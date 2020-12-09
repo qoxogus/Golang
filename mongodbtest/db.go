@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type test struct {
+type userinfo struct {
 	Classnum int    `json:"classnum" bson:"classnum"`
 	Username string `json:"username" bson:"username"`
 }
@@ -18,26 +18,33 @@ func main() {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 
 	// Connect to MongoDB
+	fmt.Println("mongoDB Connect")
 	client, err := mongo.Connect(context.TODO(), clientOptions)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if err != nil {
+		log.Fatal(err) //에러 문자열이 출력되고 종료
+	}
 
 	// Check the connection
 	err = client.Ping(context.TODO(), nil)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	coll := client.Database("DBTEST").Collection("mongodb")
 
 	//입력할 데이터
-	bae := test{1107, "Bae"}
+	userinfo := userinfo{1103, "KimBoSuk"}
 
-	coll.InsertOne(context.TODO(), bae)
+	//mongoDB insert
+	coll.InsertOne(context.TODO(), userinfo)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("insert 성공")
-	// return coll, nil
+	fmt.Println("insert success")
+
+	err = client.Disconnect(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("mongoDB Disconnect")
 }
